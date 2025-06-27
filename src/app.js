@@ -42,6 +42,32 @@ app.get("/feed", async (req, res) => {
   }
 });
 
+//Delete one user
+app.delete("/delete/:id", async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    await User.findByIdAndDelete(id);
+    res.send("User deleted successfully.");
+  } catch (error) {
+    res.status(400).send(`Something went wrong ${error.message}`);
+  }
+});
+
+//Update user
+app.patch("/update/:id", async (req, res) => {
+  const id = req.params.id;
+  const data = req.body;
+  console.log(data);
+
+  try {
+    await User.findByIdAndUpdate(id, data);
+    res.send("User Updated successfully");
+  } catch (error) {
+    res.status(400).send(`Something went wrong ${error.message}`);
+  }
+});
+
 connectDB()
   .then(() => {
     console.log("Database connection has established...");
