@@ -1,13 +1,29 @@
 const express = require("express");
 const app = express();
-const { adminAuth } = require("./middlewares/auth");
+const { connectDB } = require("./config/database");
+const User = require("./models/user");
 
-app.use("/admin", adminAuth);
+app.use(express.json());
 
-app.get("/admin/getAllData", (req, res) => {
-  res.send("Admin data has succesfully sent!! ");
+app.post("/signup", async (req, res) => {
+  //Creating an instance
+  const user = new User(req.body);
+
+  try {
+    await user.save();
+    res.send("User Data added successfully..");
+  } catch (error) {
+    res.status(400).send("Error adding User Data.", error.message);
+  }
 });
 
-app.listen(3000, () => {
-  console.log("Server is listening on port 3000...");
-});
+connectDB()
+  .then(() => {
+    console.log("Database connection has established...");
+    app.listen(7777, () => {
+      console.log("Server is listening on port 7777...");
+    });
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+  });
