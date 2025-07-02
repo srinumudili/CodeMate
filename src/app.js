@@ -6,14 +6,29 @@ const User = require("./models/user");
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
+  const allowedFields = [
+    "firstName",
+    "lastName",
+    "email",
+    "password",
+    "age",
+    "gender",
+  ];
+  const userData = {};
+
+  allowedFields.forEach((field) => {
+    if (req.body[field] !== undefined) {
+      userData[field] = req.body[field];
+    }
+  });
   //Creating an instance
-  const user = new User(req.body);
+  const user = new User(userData);
 
   try {
     await user.save();
     res.send("User Data added successfully..");
   } catch (error) {
-    res.status(400).send("Error adding User Data.", error.message);
+    res.status(400).send(`Error adding User Data. ${error.message}`);
   }
 });
 
@@ -58,13 +73,25 @@ app.delete("/delete/:id", async (req, res) => {
 app.patch("/update/:id", async (req, res) => {
   const id = req.params.id;
   const data = req.body;
-  console.log(data);
 
   try {
+    const allowedUpdates = [
+      "firstName",
+      "lastName",
+      "password",
+      "age",
+      "gender",
+    ];
+    const isAllowedUpdates = Object.keys(data).every((k) =>
+      allowedUpdates.includes(k)
+    );
+    if (!isAllowedUpdates) {
+      throw new Error("Updating user is restricted!");
+    }
     await User.findByIdAndUpdate(id, data);
     res.send("User Updated successfully");
   } catch (error) {
-    res.status(400).send(`Something went wrong ${error.message}`);
+    res.status(400).send(`Something went wrong :  ${error.message}`);
   }
 });
 
