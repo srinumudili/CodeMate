@@ -18,8 +18,12 @@ router.post("/signup", async (req, res) => {
       email,
       password: hashedPassword,
     });
-    await user.save();
-    res.send("User Data added successfully..");
+
+    const savedUser = await user.save();
+    const token = await savedUser.getJWT();
+    res.cookie("token", token);
+
+    res.json({ message: "User added successfully..", data: savedUser });
   } catch (error) {
     res.status(400).send(`ERROR : ${error.message}`);
   }
@@ -44,7 +48,7 @@ router.post("/login", async (req, res) => {
       throw new Error("Invalid Credentials.");
     }
   } catch (error) {
-    res.status(400).send(`ERROR : ${error.message}`);
+    res.status(400).send(`${error.message}`);
   }
 });
 
