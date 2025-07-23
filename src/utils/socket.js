@@ -1,6 +1,8 @@
+// socket.js
 const { Server } = require("socket.io");
 const crypto = require("crypto");
 const Chat = require("../models/chat");
+const ConnectionRequest = require("../models/connectionRequest");
 
 const getSecretRoomId = (userId, targetId) => {
   return crypto
@@ -18,15 +20,50 @@ const initializeSocket = (server) => {
   });
 
   io.on("connection", (socket) => {
-    socket.on("joinChat", ({ firstName, lastName, userId, targetId }) => {
+    // ✅ Join room securely
+    socket.on("joinChat", async ({ firstName, lastName, userId, targetId }) => {
+      const isConnected = await ConnectionRequest.findOne({
+        $or: [
+          { fromUserId: userId, toUserId: targetId },
+          { fromUserId: targetId, toUserId: userId },
+        ],
+        status: "accepted",
+      });
+
+      if (!isConnected) {
+        socket.emit(
+          "unauthorized",
+          "You are not allowed to chat with this user."
+        );
+        return;
+      }
+
       const roomId = getSecretRoomId(userId, targetId);
       socket.join(roomId);
-      console.log(`${firstName} ${lastName} has joined room ${roomId}`);
+      console.log(`${firstName} ${lastName} joined room ${roomId}`);
     });
+
+    // ✅ Send message securely
     socket.on(
       "sendMessage",
       async ({ firstName, lastName, senderId, receiverId, text }) => {
         try {
+          const isConnected = await ConnectionRequest.findOne({
+            $or: [
+              { fromUserId: senderId, toUserId: receiverId },
+              { fromUserId: receiverId, toUserId: senderId },
+            ],
+            status: "accepted",
+          });
+
+          if (!isConnected) {
+            socket.emit(
+              "unauthorized",
+              "You are not allowed to send messages to this user."
+            );
+            return;
+          }
+
           const roomId = getSecretRoomId(senderId, receiverId);
 
           let chat = await Chat.findOne({
@@ -39,12 +76,14 @@ const initializeSocket = (server) => {
               messages: [],
             });
           }
+
           chat.messages.push({
             senderId,
             text,
           });
 
           await chat.save();
+
           io.to(roomId).emit("receiveMessage", {
             firstName,
             lastName,
@@ -52,12 +91,13 @@ const initializeSocket = (server) => {
             senderId,
           });
         } catch (error) {
-          console.error(error);
+          console.error("Socket sendMessage error:", error.message);
         }
       }
     );
+
     socket.on("disconnect", () => {
-      console.log("Disconnected!!!");
+      console.log("User disconnected");
     });
   });
 };
