@@ -1,14 +1,18 @@
 const express = require("express");
-const app = express();
-const { connectDB } = require("./config/database");
-
-const cookieParser = require("cookie-parser");
+const http = require("http");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const cookieParser = require("cookie-parser");
+
+const { connectDB } = require("./config/database");
+const initializeSocket = require("./utils/socket");
+
+// Load environment variables
 dotenv.config();
 
-const http = require("http");
+const app = express();
 
+// Middleware
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -16,33 +20,37 @@ app.use(
     credentials: true,
   })
 );
-
 app.use(express.json());
 app.use(cookieParser());
 
-const appRouter = require("./routes/auth");
-const profileRouter = require("./routes/profile");
-const requestRouter = require("./routes/request");
-const userRouter = require("./routes/user");
-const chatRouter = require("./routes/chat");
-const initializeSocket = require("./utils/socket");
+// Routes
+const authRoutes = require("./routes/auth");
+const profileRoutes = require("./routes/profile");
+const requestRoutes = require("./routes/request");
+const userRoutes = require("./routes/user");
+const chatRoutes = require("./routes/chat");
 
-app.use("/", appRouter);
-app.use("/", profileRouter);
-app.use("/", requestRouter);
-app.use("/", userRouter);
-app.use("/", chatRouter);
+// Mount routes with proper prefixes
+app.use("/api/auth", authRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/requests", requestRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/chat", chatRoutes);
 
+// Create server and attach socket
 const server = http.createServer(app);
 initializeSocket(server);
 
+// Connect DB and start server
 connectDB()
   .then(() => {
-    console.log("Database connection has established...");
+    console.log("✅ MongoDB connected");
     server.listen(process.env.PORT, () => {
-      console.log(`Server is listening on PORT: ${process.env.PORT}`);
+      console.log(
+        `🚀 Server is running on http://localhost:${process.env.PORT}`
+      );
     });
   })
   .catch((err) => {
-    console.error("MongoDB connection error:", err);
+    console.error("❌ MongoDB connection error:", err.message);
   });
