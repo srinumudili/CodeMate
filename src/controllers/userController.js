@@ -72,7 +72,9 @@ exports.getUserFeed = async (req, res) => {
       hiddenUsers.add(req.fromUserId.toString());
       hiddenUsers.add(req.toUserId.toString());
     });
-    hiddenUsers.add(loggedInUser._id.toString());
+    if (loggedInUser && loggedInUser._id) {
+      hiddenUsers.add(loggedInUser._id.toString());
+    }
 
     const users = await User.find({
       _id: { $nin: Array.from(hiddenUsers) },
