@@ -14,7 +14,7 @@ const app = express();
 // ✅ Allowed origins for CORS
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://code-mate-one-rho.vercel.app", // ← Vercel frontend
+  "https://code-mate-dev.vercel.app", // ← Vercel frontend
 ];
 
 // ✅ CORS configuration
