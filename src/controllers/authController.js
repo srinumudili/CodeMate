@@ -2,7 +2,15 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/user");
 const { validateSignupData } = require("../utils/Validation");
 
-// Signup Controller
+// Cookie options for cross-origin secure communication
+const cookieOptions = {
+  httpOnly: true,
+  secure: true, // Only works over HTTPS
+  sameSite: "None", // Required for cross-site cookie sharing (e.g., Vercel + Render)
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+};
+
+// ✅ Signup Controller
 exports.signup = async (req, res) => {
   try {
     validateSignupData(req);
@@ -21,7 +29,7 @@ exports.signup = async (req, res) => {
     const savedUser = await user.save();
     const token = await savedUser.getJWT();
 
-    res.cookie("token", token);
+    res.cookie("token", token, cookieOptions);
     res
       .status(201)
       .json({ message: "User added successfully.", data: savedUser });
@@ -30,7 +38,7 @@ exports.signup = async (req, res) => {
   }
 };
 
-// Login Controller
+// ✅ Login Controller
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -43,16 +51,19 @@ exports.login = async (req, res) => {
 
     const token = await user.getJWT();
 
-    res.cookie("token", token);
+    res.cookie("token", token, cookieOptions);
     res.status(200).json({ message: "Login Successful!", data: user });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 };
 
-// Logout Controller
+// ✅ Logout Controller
 exports.logout = async (req, res) => {
   res.cookie("token", null, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
     expires: new Date(Date.now()),
   });
   res.status(200).json({ message: "Logout successful." });
