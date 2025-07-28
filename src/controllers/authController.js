@@ -5,8 +5,8 @@ const { validateSignupData } = require("../utils/Validation");
 // Cookie options for cross-origin secure communication
 const cookieOptions = {
   httpOnly: true,
-  secure: true, // Only works over HTTPS
-  sameSite: "None", // Required for cross-site cookie sharing (e.g., Vercel + Render)
+  secure: true,
+  sameSite: "None",
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
