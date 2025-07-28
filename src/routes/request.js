@@ -7,7 +7,7 @@ const {
   reviewConnectionRequest,
 } = require("../controllers/requestController");
 
-router.post("/:toUserId", userAuth, sendConnectionRequest);
-router.post("/review/:requestId", userAuth, reviewConnectionRequest);
+router.post("/send/:toUserId", userAuth, sendConnectionRequest);
+router.patch("/review/:requestId", userAuth, reviewConnectionRequest);
 
 module.exports = router;
