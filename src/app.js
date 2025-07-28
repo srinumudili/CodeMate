@@ -3,7 +3,6 @@ const http = require("http");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
-
 const { connectDB } = require("./config/database");
 const initializeSocket = require("./utils/socket");
 
@@ -23,6 +22,32 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+// Health check / root route
+app.get("/", (req, res) => {
+  res.json({
+    message: "🚀 CodeMate Backend API is running!",
+    status: "success",
+    timestamp: new Date().toISOString(),
+    version: "1.0.0",
+    endpoints: {
+      auth: "/api/auth",
+      profile: "/api/profile",
+      requests: "/api/requests",
+      user: "/api/user",
+      chat: "/api/chat",
+    },
+  });
+});
+
+// API health check
+app.get("/api", (req, res) => {
+  res.json({
+    message: "CodeMate API endpoints",
+    status: "active",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Routes
 const authRoutes = require("./routes/auth");
 const profileRoutes = require("./routes/profile");
@@ -37,6 +62,31 @@ app.use("/api/requests", requestRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 
+// Handle 404 for undefined routes
+app.use("*", (req, res) => {
+  res.status(404).json({
+    error: "Route not found",
+    message: `Cannot ${req.method} ${req.originalUrl}`,
+    availableEndpoints: [
+      "/",
+      "/api",
+      "/api/auth",
+      "/api/profile",
+      "/api/requests",
+      "/api/user",
+      "/api/chat",
+    ],
+  });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error("Error:", err.message);
+  res.status(500).json({
+    error: "Something went wrong",
+  });
+});
+
 // Create server and attach socket
 const server = http.createServer(app);
 initializeSocket(server);
@@ -45,12 +95,14 @@ initializeSocket(server);
 connectDB()
   .then(() => {
     console.log("✅ MongoDB connected");
-    server.listen(process.env.PORT, () => {
-      console.log(
-        `🚀 Server is running on http://localhost:${process.env.PORT}`
-      );
+    const PORT = process.env.PORT || 3000;
+    server.listen(PORT, () => {
+      console.log(`🚀 Server is running on port ${PORT}`);
+      console.log(`📍 Health check: http://localhost:${PORT}/`);
+      console.log(`🔗 API endpoints: http://localhost:${PORT}/api`);
     });
   })
   .catch((err) => {
     console.error("❌ MongoDB connection error:", err.message);
+    process.exit(1);
   });
