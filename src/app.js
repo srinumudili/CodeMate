@@ -6,27 +6,14 @@ const cookieParser = require("cookie-parser");
 const { connectDB } = require("./config/database");
 const initializeSocket = require("./utils/socket");
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
 
-// ✅ Allowed origins for CORS
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://code-mate-dev.vercel.app", // ← Vercel frontend
-];
-
 // ✅ CORS configuration
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // Allow requests like Postman/cURL
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error("Not allowed by CORS"));
-    },
+    origin: process.env.CLIENT_URL,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
   })

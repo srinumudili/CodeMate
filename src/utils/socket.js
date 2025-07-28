@@ -1,8 +1,8 @@
-// socket.js
 const { Server } = require("socket.io");
 const crypto = require("crypto");
 const Chat = require("../models/chat");
 const ConnectionRequest = require("../models/connectionRequest");
+require("dotenv").config();
 
 const getSecretRoomId = (userId, targetId) => {
   return crypto
@@ -14,7 +14,7 @@ const getSecretRoomId = (userId, targetId) => {
 const initializeSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: process.env.CLIENT_URL,
       credentials: true,
     },
   });
