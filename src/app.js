@@ -63,21 +63,21 @@ app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 
 // Handle 404 for undefined routes
-// app.use("*", (req, res) => {
-//   res.status(404).json({
-//     error: "Route not found",
-//     message: `Cannot ${req.method} ${req.originalUrl}`,
-//     availableEndpoints: [
-//       "/",
-//       "/api",
-//       "/api/auth",
-//       "/api/profile",
-//       "/api/requests",
-//       "/api/user",
-//       "/api/chat",
-//     ],
-//   });
-// });
+app.use("*", (req, res) => {
+  res.status(404).json({
+    error: "Route not found",
+    message: `Cannot ${req.method} ${req.originalUrl}`,
+    availableEndpoints: [
+      "/",
+      "/api",
+      "/api/auth",
+      "/api/profile",
+      "/api/requests",
+      "/api/user",
+      "/api/chat",
+    ],
+  });
+});
 
 // // Global error handler
 // app.use((err, req, res, next) => {
