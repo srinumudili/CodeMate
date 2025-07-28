@@ -53,14 +53,14 @@ const authRoutes = require("./routes/auth");
 const profileRoutes = require("./routes/profile");
 const requestRoutes = require("./routes/request");
 const userRoutes = require("./routes/user");
-// const chatRoutes = require("./routes/chat");
+const chatRoutes = require("./routes/chat");
 
 // Mount routes with proper prefixes
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/requests", requestRoutes);
 app.use("/api/user", userRoutes);
-// app.use("/api/chat", chatRoutes);
+app.use("/api/chat", chatRoutes);
 
 // Handle 404 for undefined routes
 // app.use("*", (req, res) => {
