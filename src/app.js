@@ -63,7 +63,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 
 // Handle 404 for undefined routes
-app.use("*", (req, res) => {
+app.all("*", (req, res) => {
   res.status(404).json({
     error: "Route not found",
     message: `Cannot ${req.method} ${req.originalUrl}`,
@@ -79,13 +79,13 @@ app.use("*", (req, res) => {
   });
 });
 
-// // Global error handler
-// app.use((err, req, res, next) => {
-//   console.error("Error:", err.message);
-//   res.status(500).json({
-//     error: "Something went wrong",
-//   });
-// });
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error("Error:", err.message);
+  res.status(500).json({
+    error: "Something went wrong",
+  });
+});
 
 // Create server and attach socket
 const server = http.createServer(app);
