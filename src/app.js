@@ -11,18 +11,32 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
+// ✅ Allowed origins for CORS
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://code-mate-one-rho.vercel.app", // ← Vercel frontend
+];
+
+// ✅ CORS configuration
 app.use(
   cors({
-    origin: "http://localhost:5173" || "https://code-mate-one-rho.vercel.app",
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true); // Allow requests like Postman/cURL
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
+
+// ✅ Middleware
 app.use(express.json());
 app.use(cookieParser());
 
-// Health check / root route
+// ✅ Health check
 app.get("/", (req, res) => {
   res.json({
     message: "🚀 CodeMate Backend API is running!",
@@ -39,7 +53,6 @@ app.get("/", (req, res) => {
   });
 });
 
-// API health check
 app.get("/api", (req, res) => {
   res.json({
     message: "CodeMate API endpoints",
@@ -48,40 +61,42 @@ app.get("/api", (req, res) => {
   });
 });
 
-// Routes
+// ✅ Routes
 const authRoutes = require("./routes/auth");
 const profileRoutes = require("./routes/profile");
 const requestRoutes = require("./routes/request");
 const userRoutes = require("./routes/user");
 const chatRoutes = require("./routes/chat");
 
-// Mount routes with proper prefixes
+// ✅ Route mounting
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/requests", requestRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 
-// Handle 404 fallback safely without "*"
+// ✅ 404 handler
 app.use((req, res) => {
   res.status(404).json({
     error: "Route not found",
+    path: req.originalUrl,
   });
 });
 
-// Global error handler
+// ✅ Global error handler
 app.use((err, req, res, next) => {
   console.error("Error:", err.message);
   res.status(500).json({
-    error: "Something went wrong",
+    error: "Internal Server Error",
+    message: err.message,
   });
 });
 
-// Create server and attach socket
+// ✅ Start server with socket
 const server = http.createServer(app);
 initializeSocket(server);
 
-// Connect DB and start server
+// ✅ Connect DB and run server
 connectDB()
   .then(() => {
     console.log("✅ MongoDB connected");
