@@ -10,20 +10,18 @@ const cookieOptions = {
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
-// ✅ Signup Controller
+//Signup Controller
 exports.signup = async (req, res) => {
   try {
     validateSignupData(req);
 
     const { firstName, lastName, email, password } = req.body;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const user = new User({
       firstName,
       lastName,
       email,
-      password: hashedPassword,
+      password,
     });
 
     const savedUser = await user.save();
@@ -38,18 +36,21 @@ exports.signup = async (req, res) => {
   }
 };
 
-// ✅ Login Controller
+//Login Controller
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+password");
     if (!user) throw new Error("Invalid Credentials.");
 
     const isPasswordValid = await user.validatePassword(password);
     if (!isPasswordValid) throw new Error("Invalid Credentials.");
 
     const token = await user.getJWT();
+
+    // Remove password before sending response
+    user.password = undefined;
 
     res.cookie("token", token, cookieOptions);
     res.status(200).json({ message: "Login Successful!", data: user });
@@ -58,7 +59,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// ✅ Logout Controller
+//Logout Controller
 exports.logout = async (req, res) => {
   res.cookie("token", null, {
     httpOnly: true,

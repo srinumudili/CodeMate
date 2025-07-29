@@ -36,6 +36,7 @@ app.get("/", (req, res) => {
       requests: "/api/requests",
       user: "/api/user",
       chat: "/api/chat",
+      upload: "/api/upload",
     },
   });
 });
@@ -54,6 +55,7 @@ const profileRoutes = require("./routes/profile");
 const requestRoutes = require("./routes/request");
 const userRoutes = require("./routes/user");
 const chatRoutes = require("./routes/chat");
+const uploadRoutes = require("./routes/upload");
 
 // ✅ Route mounting
 app.use("/api/auth", authRoutes);
@@ -61,6 +63,7 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/requests", requestRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // ✅ 404 handler
 app.use((req, res) => {

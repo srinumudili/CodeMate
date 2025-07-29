@@ -19,35 +19,39 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      trim: true,
       lowercase: true,
-      validate(val) {
-        if (!validator.isEmail(val)) {
-          throw new Error("Invalid email address");
-        }
+      trim: true,
+      index: true,
+      validate: {
+        validator: validator.isEmail,
+        message: "Invalid email address",
       },
     },
     password: {
       type: String,
       required: true,
+      select: false,
     },
     age: {
       type: Number,
-      min: 18,
+      min: [18, "Age must be at least 18"],
     },
     gender: {
       type: String,
-      enum: ["male", "female", "others"],
-      message: "Gender must be 'male', 'female', or 'others'",
+      enum: {
+        values: ["male", "female", "others"],
+        message: "Gender must be 'male', 'female', or 'others'",
+      },
     },
     profileUrl: {
       type: String,
-      default:
-        "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png",
-      validate(val) {
-        if (!validator.isURL(val)) {
-          throw new Error(`Invalid Profile URL: ${val}`);
-        }
+      default: function () {
+        if (!process.env.CLOUDINARY_CLOUD_NAME) return undefined;
+        return `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/v1753781457/defaultAvatar_mjdmpo.jpg`;
+      },
+      validate: {
+        validator: validator.isURL,
+        message: "Invalid Profile URL",
       },
     },
     about: {
@@ -61,25 +65,31 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-userSchema.methods.getJWT = async function () {
-  const user = this;
-  const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+//Hash password before saving
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
+//Instance method to generate JWT
+userSchema.methods.getJWT = function () {
+  return jwt.sign({ _id: this._id }, process.env.JWT_SECRET, {
     expiresIn: "1d",
   });
-
-  return token;
 };
 
+//Instance method to validate password
 userSchema.methods.validatePassword = async function (passwordInputByUser) {
-  const user = this;
-  const hashedPassword = user.password;
+  return await bcrypt.compare(passwordInputByUser, this.password);
+};
 
-  const isPasswordValid = await bcrypt.compare(
-    passwordInputByUser,
-    hashedPassword
-  );
-
-  return isPasswordValid;
+// Clean up sensitive fields when sending data
+userSchema.methods.toJSON = function () {
+  const user = this.toObject();
+  delete user.password;
+  delete user.__v;
+  return user;
 };
 
 const User = mongoose.model("User", userSchema);
