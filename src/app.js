@@ -3,10 +3,18 @@ const http = require("http");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
+const path = require("path");
+
 const { connectDB } = require("./config/database");
 const initializeSocket = require("./utils/socket");
 
 dotenv.config();
+dotenv.config({
+  path: path.resolve(
+    __dirname,
+    `.env.${process.env.NODE_ENV || "development"}`
+  ),
+});
 
 const app = express();
 
