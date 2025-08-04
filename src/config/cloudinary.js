@@ -11,7 +11,7 @@ const storage = new CloudinaryStorage({
   cloudinary,
   params: {
     folder: "codemate_profiles",
-    allowed_formats: ["jpg", "png"],
+    allowed_formats: ["jpg", "jpeg", "png", "webp", "gif", "bmp"],
     transformation: [{ width: 500, height: 500, crop: "limit" }],
   },
 });
