@@ -2,25 +2,64 @@ const User = require("../models/user");
 
 exports.uploadProfileImage = async (req, res) => {
   try {
+    console.log("Upload request received");
+    console.log("File:", req.file);
+    console.log("User ID:", req.user?._id);
+
+    // Check if file exists
     if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded." });
+      console.log("No file uploaded");
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded.",
+      });
     }
 
+    // Check if user exists in request
+    if (!req.user || !req.user._id) {
+      console.log("No user in request");
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated.",
+      });
+    }
+
+    // Find user in database
     const user = await User.findById(req.user._id);
-
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      console.log("User not found in database");
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
     }
 
-    user.profileUrl = req.file.path;
+    // Update user profile URL
+    const profileUrl = req.file.path || req.file.secure_url;
+    console.log("New profile URL:", profileUrl);
+
+    user.profileUrl = profileUrl;
     await user.save();
-    res
-      .status(200)
-      .json({ message: "Profile image updated.", profileUrl: user.profileUrl });
+    console.log("Profile image updated successfully");
+
+    res.status(200).json({
+      success: true,
+      message: "Profile image updated successfully.",
+      data: {
+        profileUrl: user.profileUrl,
+      },
+    });
   } catch (error) {
+    console.error("Upload error:", error);
+    console.error("Error stack:", error.stack);
+
     res.status(500).json({
+      success: false,
       message: "Something went wrong during image upload.",
-      error: error.message,
+      error:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : "Internal server error",
     });
   }
 };
