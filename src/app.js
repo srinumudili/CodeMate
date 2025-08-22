@@ -1,12 +1,11 @@
 const express = require("express");
-const http = require("http");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const path = require("path");
-
+const { createServer } = require("http");
 const { connectDB } = require("./config/database");
-const initializeSocket = require("./utils/socket");
+const { initializeSocket } = require("./utils/socket");
 
 dotenv.config();
 dotenv.config({
@@ -62,16 +61,16 @@ const authRoutes = require("./routes/auth");
 const profileRoutes = require("./routes/profile");
 const requestRoutes = require("./routes/request");
 const userRoutes = require("./routes/user");
-const chatRoutes = require("./routes/chat");
 const uploadRoutes = require("./routes/upload");
+const chatRoutes = require("./routes/chat");
 
 // ✅ Route mounting
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/requests", requestRoutes);
 app.use("/api/user", userRoutes);
-app.use("/api/chat", chatRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/chat", chatRoutes);
 
 // ✅ 404 handler
 app.use((req, res) => {
@@ -90,9 +89,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ✅ Start server with socket
-const server = http.createServer(app);
-initializeSocket(server);
+const server = createServer(app);
+const io = initializeSocket(server);
 
 // ✅ Connect DB and run server
 connectDB()

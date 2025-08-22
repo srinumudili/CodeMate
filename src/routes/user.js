@@ -10,9 +10,6 @@ const {
 // GET: Received Connection Requests
 router.get("/requests", userAuth, getReceivedRequests);
 
-// GET: All Accepted Connections
-router.get("/connections", userAuth, getConnections);
-
 // GET: Feed (not connected users)
 router.get("/feed", userAuth, getUserFeed);
 
