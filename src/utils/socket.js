@@ -108,6 +108,12 @@ const initializeSocket = (server) => {
           conversation.updatedAt = new Date();
           await conversation.save();
 
+          // Populate the conversation for complete data
+          await conversation.populate([
+            { path: "participants", select: "firstName lastName profileUrl" },
+            { path: "lastMessage" },
+          ]);
+
           const messageData = {
             _id: message._id,
             conversationId: message.conversationId,
@@ -120,11 +126,32 @@ const initializeSocket = (server) => {
             updatedAt: message.updatedAt,
           };
 
+          // Enhanced payload with conversation data for new conversations
+          const enhancedPayload = {
+            ...messageData,
+            conversationData: {
+              _id: conversation._id,
+              participants: conversation.participants,
+              lastMessage: messageData,
+              updatedAt: conversation.updatedAt,
+              createdAt: conversation.createdAt,
+            },
+          };
+
           // Emit to conversation room
           io.to(conversation._id.toString()).emit(
             "receiveMessage",
-            messageData
+            enhancedPayload
           );
+
+          // Also emit to individual participants to ensure they get the message
+          // even if they haven't joined the conversation room yet
+          conversation.participants.forEach((participant) => {
+            io.to(participant._id.toString()).emit(
+              "receiveMessage",
+              enhancedPayload
+            );
+          });
         } catch (err) {
           console.error("sendMessage error:", err);
           socket.emit("error", { message: "Failed to send message" });
