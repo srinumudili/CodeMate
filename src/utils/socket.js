@@ -40,6 +40,11 @@ const initializeSocket = (server) => {
     // Notify connections that this user is online
     broadcastUserStatus(userId, true);
 
+    /** ---------------- New Event: Request Online Users ---------------- **/
+    socket.on("requestOnlineUsers", () => {
+      socket.emit("onlineUsers", getConnectedUsers());
+    });
+
     /** ---------------- Chat Events ---------------- **/
 
     socket.on("joinChat", async ({ conversationId }) => {
@@ -198,6 +203,7 @@ const initializeSocket = (server) => {
 
     /** ---------------- Disconnect Event ---------------- **/
     socket.on("disconnect", () => {
+      console.log(`User disconnected: ${socket.user.firstName} (${socket.id})`);
       handleSocketDisconnect(userId, socket.id);
     });
   });
