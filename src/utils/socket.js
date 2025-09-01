@@ -138,13 +138,7 @@ const initializeSocket = (server) => {
             },
           };
 
-          // Emit to conversation room
-          io.to(conversation._id.toString()).emit(
-            "receiveMessage",
-            enhancedPayload
-          );
-
-          // Also emit to individual participants to ensure they get the message
+          // emit to individual participants to ensure they get the message
           // even if they haven't joined the conversation room yet
           conversation.participants.forEach((participant) => {
             io.to(participant._id.toString()).emit(
